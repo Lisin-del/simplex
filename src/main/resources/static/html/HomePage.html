@@ -26,22 +26,116 @@
 			</div>
 			<div class="col"></div>
 		</div>
-		<div class="row">
-			<div class="col"></div>
-			<div class="col">
-				<div class="input-group mb-3">
-					<input type="text" class="form-control"
-						placeholder="Recipient's username"
-						aria-label="Recipient's username" aria-describedby="basic-addon2">
-					<span class="input-group-text" id="basic-addon2">x1</span>
-					<input type="text" class="form-control"
-						placeholder="Recipient's username"
-						aria-label="Recipient's username" aria-describedby="basic-addon2">
-					<span class="input-group-text" id="basic-addon2">x2</span>
+		<form id="myForm" method="POST" action="/process" enctype="multipart/form-data">
+			<div class="row">
+				<div class="col"></div>
+				<div class="col">
+					<div class="input-group input-group-sm mb-3">
+						<h4>L = </h4>
+						<input  name="x01" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1.0">
+						<span class="input-group-text">X1</span>
+
+						<input name="x02" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X2</span>
+
+						<input name="x03" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X3</span>
+
+						<input name="x04" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X4</span>
+
+						<input name="x05" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X5</span>
+					</div>
 				</div>
+				<div class="col"></div>
 			</div>
-			<div class="col"></div>
-		</div>
+			<div class="row">
+				<div class="col"></div>
+				<div class="col">
+					<div class="input-group input-group-sm mb-3">
+						<input name="x11" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X1</span>
+
+						<input name="x12" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X2</span>
+
+						<input name="x13" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="2">
+						<span class="input-group-text">X3</span>
+
+						<input name="x14" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="0">
+						<span class="input-group-text">X4</span>
+
+						<input name="x15" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="0">
+						<span class="input-group-text">X5</span>
+
+						<h4> = </h4>
+
+						<input name="result1" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="4">
+					</div>
+				</div>
+				<div class="col"></div>
+			</div>
+			<div class="row">
+				<div class="col"></div>
+				<div class="col">
+					<div class="input-group input-group-sm mb-3">
+						<input name="x21" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="0">
+						<span class="input-group-text">X1</span>
+
+						<input name="x22" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="-2">
+						<span class="input-group-text">X2</span>
+
+						<input name="x23" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="-2">
+						<span class="input-group-text">X3</span>
+
+						<input name="x24" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X4</span>
+
+						<input name="x25" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X5</span>
+
+						<h4> = </h4>
+
+						<input name="result2" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="-6">
+					</div>
+				</div>
+				<div class="col"></div>
+			</div>
+			<div class="row">
+				<div class="col"></div>
+				<div class="col">
+					<div class="input-group input-group-sm mb-3">
+						<input name="x31" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X1</span>
+
+						<input name="x32" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="-1">
+						<span class="input-group-text">X2</span>
+
+						<input name="x33" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="6">
+						<span class="input-group-text">X3</span>
+
+						<input name="x34" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="1">
+						<span class="input-group-text">X4</span>
+
+						<input name="x35" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="0">
+						<span class="input-group-text">X5</span>
+
+						<h4> = </h4>
+
+						<input name="result3" type="text" class="form-control" aria-describedby="inputGroup-sizing-sm" value="12">
+					</div>
+				</div>
+				<div class="col"></div>
+			</div>
+			<div class="row">
+				<div class="col"></div>
+				<div class="col">
+					<button type="submit" class="btn btn-secondary">Get result</button>
+				</div>
+				<div class="col"></div>
+			</div>
+		</form>
 	</div>
 </body>
 </html>
