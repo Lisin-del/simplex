@@ -7,28 +7,44 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.lisin.simplex.models.AdditionalExpressionModel;
 import ru.lisin.simplex.models.ExpressionModel;
+import ru.lisin.simplex.services.TableGenerator;
+
+import java.io.IOException;
 
 @Controller
 public class SimplexController {
     @Autowired
     @Qualifier(value = "targetFunction")
-    ExpressionModel targetFunction;
+    private ExpressionModel targetFunction;
 
     @Autowired
     @Qualifier(value = "funcRestriction1")
-    ExpressionModel funcRestriction1;
+    private ExpressionModel funcRestriction1;
 
 	@Autowired
 	@Qualifier(value = "funcRestriction2")
-	ExpressionModel funcRestriction2;
+	private ExpressionModel funcRestriction2;
 
 	@Autowired
 	@Qualifier(value = "funcRestriction3")
-	ExpressionModel funcRestriction3;
+	private ExpressionModel funcRestriction3;
+
+	@Autowired
+	private TableGenerator tableGenerator;
+
+	@Autowired
+	private AdditionalExpressionModel additionalExpressionModel;
 
     @GetMapping("/home")
-    public String getHomePage() {
+    public String getHomePage() throws IOException {
+		tableGenerator.createFirstTableVType(
+				additionalExpressionModel.getV1(),
+				additionalExpressionModel.getV2(),
+				additionalExpressionModel.getV3(),
+				additionalExpressionModel.getV()
+		);
         return "redirect:/html/HomePage.html";
     }
 
