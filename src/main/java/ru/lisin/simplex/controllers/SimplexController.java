@@ -2,16 +2,16 @@ package ru.lisin.simplex.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.lisin.simplex.models.AdditionalExpressionModel;
 import ru.lisin.simplex.models.ExpressionModel;
-import ru.lisin.simplex.services.TableGenerator;
+import ru.lisin.simplex.services.TableCalculator;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Controller
 public class SimplexController {
@@ -32,19 +32,20 @@ public class SimplexController {
 	private ExpressionModel funcRestriction3;
 
 	@Autowired
-	private TableGenerator tableGenerator;
+	private TableCalculator tableCalculator;
 
 	@Autowired
 	private AdditionalExpressionModel additionalExpressionModel;
 
     @GetMapping("/home")
     public String getHomePage() throws IOException {
-		tableGenerator.createFirstTableVType(
+		tableCalculator.calculateFirstVTypeTable(
 				additionalExpressionModel.getV1(),
 				additionalExpressionModel.getV2(),
 				additionalExpressionModel.getV3(),
 				additionalExpressionModel.getV()
 		);
+		tableCalculator.calculateNextTable();
         return "redirect:/html/HomePage.html";
     }
 
@@ -105,7 +106,58 @@ public class SimplexController {
 		funcRestriction3.setX5(x35);
 		funcRestriction3.setResult(result3);
 
-        return "";
+		Map<String, Double> v1 = additionalExpressionModel.getV1();
+		if (result1 < 0) {
+			v1.put("b", result1 * -1);
+			v1.put("x1", x11 * -1);
+			v1.put("x2", x12 * -1);
+			v1.put("x3", x13 * -1);
+			v1.put("x4", x14 * -1);
+			v1.put("x5", x15 * -1);
+		} else {
+			v1.put("b", result1);
+			v1.put("x1", x11);
+			v1.put("x2", x12);
+			v1.put("x3", x13);
+			v1.put("x4", x14);
+			v1.put("x5", x15);
+		}
+
+		Map<String, Double> v2 = additionalExpressionModel.getV2();
+		if (result2 < 0) {
+			v2.put("b", result2 * -1);
+			v2.put("x1", x21 * -1);
+			v2.put("x2", x22 * -1);
+			v2.put("x3", x23 * -1);
+			v2.put("x4", x24 * -1);
+			v2.put("x5", x25 * -1);
+		} else {
+			v2.put("b", result2);
+			v2.put("x1", x21);
+			v2.put("x2", x22);
+			v2.put("x3", x23);
+			v2.put("x4", x24);
+			v2.put("x5", x25);
+		}
+
+		Map<String, Double> v3 = additionalExpressionModel.getV3();
+		if (result3 < 0) {
+			v3.put("b", result3 * -1);
+			v3.put("x1", x31 * -1);
+			v3.put("x2", x32 * -1);
+			v3.put("x3", x33 * -1);
+			v3.put("x4", x34 * -1);
+			v3.put("x5", x35 * -1);
+		} else {
+			v3.put("b", result3);
+			v3.put("x1", x31);
+			v3.put("x2", x32);
+			v3.put("x3", x33);
+			v3.put("x4", x34);
+			v3.put("x5", x35);
+		}
+
+		return "redirect:/home";
     }
 
 }
