@@ -51,17 +51,43 @@ public class TableCalculator {
 
     public void calculateNextTable() {
         Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = cloneSheet(workbook);
 
-        int numberOfSheets = workbook.getNumberOfSheets();
-        int numberOfClonedSheet = numberOfSheets - 1;
-        workbook.cloneSheet(numberOfClonedSheet);
-        Sheet sheetAt = workbook.getSheetAt(numberOfClonedSheet);
+        int resolvingColumnIndex = findResolvingColumnIndex(sheet);
+        int resolvingRowIndex = findResolvingRowIndex(sheet, resolvingColumnIndex);
 
-        int resolvingColumnIndex = findResolvingColumnIndex(sheetAt);
-        int resolvingRowIndex = findResolvingRowIndex(sheetAt, resolvingColumnIndex);
+        double lambda = getLambda(sheet, resolvingRowIndex, resolvingColumnIndex);
+        sheet.getRow(resolvingRowIndex + 1).getCell(resolvingColumnIndex).setCellValue(lambda);
+
+        fillResolvingColumn(sheet, resolvingColumnIndex, lambda);
 
         excelService.saveExcelFile();
 
+    }
+
+    public Sheet cloneSheet(Workbook workbook) {
+        int numberOfSheets = workbook.getNumberOfSheets();
+        int numberOfClonedSheet = numberOfSheets - 1;
+        workbook.cloneSheet(numberOfClonedSheet);
+
+        return numberOfSheets == 1 ? workbook.getSheetAt(numberOfSheets) : workbook.getSheetAt(numberOfClonedSheet);
+    }
+
+    public void fillResolvingColumn(Sheet sheet, int resolvingColumnIndex, double lambda) {
+        for (int i = 3; i < 10; i += 2) {
+            Cell cell = sheet.getRow(i).getCell(resolvingColumnIndex);
+            double numericCellValue = cell.getNumericCellValue();
+            if (numericCellValue == 0) {
+                double result = (-lambda) * sheet.getRow(i - 1).getCell(resolvingColumnIndex).getNumericCellValue();
+                cell.setCellValue(result);
+            }
+        }
+    }
+
+    public double getLambda(Sheet sheet, int resolvingRowIndex, int resolvingColumnIndex) {
+        Row resolvingRow = sheet.getRow(resolvingRowIndex);
+        Cell resolvingCell = resolvingRow.getCell(resolvingColumnIndex);
+        return 1 / resolvingCell.getNumericCellValue();
     }
 
     public int findResolvingColumnIndex(Sheet sheet) {
