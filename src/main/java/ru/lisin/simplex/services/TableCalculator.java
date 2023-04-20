@@ -57,9 +57,12 @@ public class TableCalculator {
         int resolvingRowIndex = findResolvingRowIndex(sheet, resolvingColumnIndex);
 
         double lambda = getLambda(sheet, resolvingRowIndex, resolvingColumnIndex);
+
+        //set lambda under a resolving cell
         sheet.getRow(resolvingRowIndex + 1).getCell(resolvingColumnIndex).setCellValue(lambda);
 
         fillResolvingColumn(sheet, resolvingColumnIndex, lambda);
+        fillResolvingRow(sheet, resolvingRowIndex, lambda);
 
         excelService.saveExcelFile();
 
@@ -71,6 +74,21 @@ public class TableCalculator {
         workbook.cloneSheet(numberOfClonedSheet);
 
         return numberOfSheets == 1 ? workbook.getSheetAt(numberOfSheets) : workbook.getSheetAt(numberOfClonedSheet);
+    }
+
+    public void fillResolvingRow(Sheet sheet, int resolvingRowIndex, double lambda) {
+        Row filledRow = sheet.getRow(resolvingRowIndex);
+        Row emptyRow = sheet.getRow(resolvingRowIndex + 1);
+        for (int i = 2; i < 8; ++i) {
+            Cell cell = filledRow.getCell(i);
+            double numericCellValue = cell.getNumericCellValue();
+            double resultValue = numericCellValue * lambda;
+            Cell emptyRowCell = emptyRow.getCell(i);
+
+            if (emptyRowCell.getNumericCellValue() == 0) {
+                emptyRowCell.setCellValue(resultValue);
+            }
+        }
     }
 
     public void fillResolvingColumn(Sheet sheet, int resolvingColumnIndex, double lambda) {
