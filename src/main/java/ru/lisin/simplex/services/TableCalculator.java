@@ -4,24 +4,21 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
+import java.util.*;
 
 @Service
 public class TableCalculator {
     @Autowired
     private ExcelService excelService;
+    private List<Integer> emptyRowNumbers = new ArrayList<>() {{
+        add(3);
+        add(5);
+        add(7);
+        add(9);
+    }};
 
     public void calculateFirstVTypeTable(
             Map<String, Double> v1,
@@ -64,16 +61,64 @@ public class TableCalculator {
         fillResolvingColumn(sheet, resolvingColumnIndex, lambda);
         fillResolvingRow(sheet, resolvingRowIndex, lambda);
 
+        calculateOtherCells(resolvingColumnIndex, resolvingRowIndex);
+
+        getNextResultVTable(resolvingColumnIndex, resolvingRowIndex);
+
         excelService.saveExcelFile();
+    }
+
+    public void calculateOtherCells(int resolvingColumnIndex, int resolvingRowIndex) {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = cloneSheet(workbook);
+        Row resolvingRow = sheet.getRow(resolvingRowIndex);
+
+        List<Integer> sortedRowNumbers = emptyRowNumbers.stream().filter(number -> number != resolvingRowIndex + 1).toList();
+
+        for (int rowNumber : sortedRowNumbers) {
+            Row row = sheet.getRow(rowNumber);
+
+            for (int i = 2; i < 8; ++i) {
+                Cell cell = row.getCell(i);
+
+                if (i == resolvingColumnIndex) {
+                    continue;
+                }
+
+                double result = resolvingRow.getCell(cell.getColumnIndex()).getNumericCellValue() *
+                        row.getCell(resolvingColumnIndex).getNumericCellValue();
+                cell.setCellValue(result);
+            }
+        }
+    }
+
+    public void getNextResultVTable(int resolvingColumnIndex, int resolvingRowIndex) {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = cloneSheet(workbook);
+
+        Row resolvingRow = sheet.getRow(resolvingRowIndex);
+        String basisNameValue = resolvingRow.getCell(1).getStringCellValue();
+
+        Cell resolvingCell = sheet.getRow(1).getCell(resolvingColumnIndex);
+        String freeMemberName = resolvingCell.getStringCellValue();
+
+        resolvingRow.getCell(1).setCellValue(freeMemberName);
+        resolvingCell.setCellValue(basisNameValue);
+
+        double basisCoefficient = resolvingRow.getCell(0).getNumericCellValue();
+        double freeMemberCoefficient = sheet.getRow(0).getCell(resolvingColumnIndex).getNumericCellValue();
+
+        resolvingRow.getCell(0).setCellValue(freeMemberCoefficient);
+        sheet.getRow(0).getCell(resolvingColumnIndex).setCellValue(basisCoefficient);
 
     }
 
     public Sheet cloneSheet(Workbook workbook) {
         int numberOfSheets = workbook.getNumberOfSheets();
-        int numberOfClonedSheet = numberOfSheets - 1;
-        workbook.cloneSheet(numberOfClonedSheet);
+        int indexOfClonedSheet = numberOfSheets - 1;
+        workbook.cloneSheet(indexOfClonedSheet);
 
-        return numberOfSheets == 1 ? workbook.getSheetAt(numberOfSheets) : workbook.getSheetAt(numberOfClonedSheet);
+        return workbook.getSheetAt(indexOfClonedSheet + 1);
     }
 
     public void fillResolvingRow(Sheet sheet, int resolvingRowIndex, double lambda) {
