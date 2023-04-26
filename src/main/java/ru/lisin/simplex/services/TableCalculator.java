@@ -1,5 +1,6 @@
 package ru.lisin.simplex.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
+@Slf4j
 public class TableCalculator {
     @Autowired
     private ExcelService excelService;
@@ -63,8 +65,8 @@ public class TableCalculator {
 
         calculateOtherCells(resolvingColumnIndex, resolvingRowIndex);
 
-        getNextResultVTable(resolvingColumnIndex, resolvingRowIndex);
-
+        Sheet nextResultVTableSheet = getNextResultVTable(resolvingColumnIndex, resolvingRowIndex);
+        validateTable(nextResultVTableSheet);
         excelService.saveExcelFile();
     }
 
@@ -92,7 +94,30 @@ public class TableCalculator {
         }
     }
 
-    public void getNextResultVTable(int resolvingColumnIndex, int resolvingRowIndex) {
+    public void validateTable(Sheet sheet) {
+        List<Integer> rowIndexes = new ArrayList<>() {{
+            add(2);
+            add(4);
+            add(6);
+        }};
+
+        double result = 0;
+        for (int i = 2; i < 8; ++i) {
+            for (int rowIndex : rowIndexes) {
+                Row row = sheet.getRow(rowIndex);
+                result += row.getCell(i).getNumericCellValue() * row.getCell(0).getNumericCellValue();
+            }
+            double vValue = sheet.getRow(8).getCell(i).getNumericCellValue();
+            result = result - sheet.getRow(0).getCell(i).getNumericCellValue();
+            if (vValue != result) {
+                log.error("Result value in row V is {}, but expected {}", vValue, result);
+            }
+            result = 0;
+        }
+
+    }
+
+    public Sheet getNextResultVTable(int resolvingColumnIndex, int resolvingRowIndex) {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
 
@@ -111,6 +136,35 @@ public class TableCalculator {
         resolvingRow.getCell(0).setCellValue(freeMemberCoefficient);
         sheet.getRow(0).getCell(resolvingColumnIndex).setCellValue(basisCoefficient);
 
+        Row rowToMoveToResolvingRow = sheet.getRow(resolvingRowIndex + 1);
+
+        for (int i = 2; i < 8; ++i) {
+            Cell rowToMoveToResolvingRowCell = rowToMoveToResolvingRow.getCell(i);
+            resolvingRow.getCell(i).setCellValue(rowToMoveToResolvingRowCell.getNumericCellValue());
+            rowToMoveToResolvingRow.removeCell(rowToMoveToResolvingRowCell);
+        }
+
+        List<Integer> sortedRowNumbers = emptyRowNumbers.stream().filter(number -> number != resolvingRowIndex + 1).toList();
+        for (int rowNumber : sortedRowNumbers) {
+            Cell cell = sheet.getRow(rowNumber).getCell(resolvingColumnIndex);
+            sheet.getRow(rowNumber - 1).getCell(resolvingColumnIndex).setCellValue(cell.getNumericCellValue());
+            sheet.getRow(rowNumber).removeCell(cell);
+        }
+
+        for (int rowNumber : sortedRowNumbers) {
+            Row notResolvingRow = sheet.getRow(rowNumber);
+
+            for (int i = 2; i < 8; ++i) {
+                if (i == resolvingColumnIndex) {
+                    continue;
+                }
+                double resultCellValue = notResolvingRow.getCell(i).getNumericCellValue() + sheet.getRow(rowNumber - 1).getCell(i).getNumericCellValue();
+                sheet.getRow(rowNumber - 1).getCell(i).setCellValue(resultCellValue);
+                notResolvingRow.removeCell(notResolvingRow.getCell(i));
+            }
+        }
+
+        return sheet;
     }
 
     public Sheet cloneSheet(Workbook workbook) {
