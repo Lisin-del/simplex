@@ -8,7 +8,10 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -48,6 +51,18 @@ public class TableCalculator {
         excelService.fillFirstVTable(v1, v2, v3, v, resultVRow);
     }
 
+    public void generateCellsAgain() {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
+
+        for (int rowNumber : emptyRowNumbers) {
+            Row row = sheet.getRow(rowNumber);
+            for (int i = 2; i < 8; ++i) {
+                row.createCell(i);
+            }
+        }
+    }
+
     public void calculateNextTable() {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
@@ -60,7 +75,7 @@ public class TableCalculator {
         //set lambda under a resolving cell
         sheet.getRow(resolvingRowIndex + 1).getCell(resolvingColumnIndex).setCellValue(lambda);
 
-        fillResolvingColumn(sheet, resolvingColumnIndex, lambda);
+        fillResolvingColumn(sheet, resolvingColumnIndex, resolvingRowIndex, lambda);
         fillResolvingRow(sheet, resolvingRowIndex, lambda);
 
         calculateOtherCells(resolvingColumnIndex, resolvingRowIndex);
@@ -94,6 +109,20 @@ public class TableCalculator {
         }
     }
 
+    public boolean isFinishCalculatingVTables() {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
+
+        Row rowForCheck = sheet.getRow(8);
+        for (int i = 3; i < 8; ++i) {
+            double cellValueForCheck = rowForCheck.getCell(i).getNumericCellValue();
+            if (cellValueForCheck > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void validateTable(Sheet sheet) {
         List<Integer> rowIndexes = new ArrayList<>() {{
             add(2);
@@ -109,6 +138,7 @@ public class TableCalculator {
             }
             double vValue = sheet.getRow(8).getCell(i).getNumericCellValue();
             result = result - sheet.getRow(0).getCell(i).getNumericCellValue();
+
             if (vValue != result) {
                 log.error("Result value in row V is {}, but expected {}", vValue, result);
             }
@@ -190,9 +220,17 @@ public class TableCalculator {
         }
     }
 
-    public void fillResolvingColumn(Sheet sheet, int resolvingColumnIndex, double lambda) {
+    public void fillResolvingColumn(Sheet sheet, int resolvingColumnIndex, int resolvingRowIndex, double lambda) {
         for (int i = 3; i < 10; i += 2) {
-            Cell cell = sheet.getRow(i).getCell(resolvingColumnIndex);
+
+            if (resolvingRowIndex == (i - 1)) {
+                continue;
+            }
+
+            Row row = sheet.getRow(i);
+            row.createCell(resolvingColumnIndex);
+            Cell cell = row.getCell(resolvingColumnIndex);
+
             double numericCellValue = cell.getNumericCellValue();
             if (numericCellValue == 0) {
                 double result = (-lambda) * sheet.getRow(i - 1).getCell(resolvingColumnIndex).getNumericCellValue();
@@ -217,8 +255,13 @@ public class TableCalculator {
             double numericCellValue = row8Cell.getNumericCellValue();
 
             if (numericCellValue > 0 && numericCellValue > cell8Value) {
+                //cell8Value = numericCellValue;
                 resolvingColumnIndex = i;
             }
+        }
+
+        if (resolvingColumnIndex == 0) {
+            log.error("Can not find a resolving column!");
         }
 
         return resolvingColumnIndex;
@@ -237,11 +280,23 @@ public class TableCalculator {
         Cell row4B = row4.getCell(2);
         Cell row6B = row6.getCell(2);
 
-        double row2Result = row2B.getNumericCellValue() / row2Cell.getNumericCellValue();
-        double row4Result = row4B.getNumericCellValue() / row4Cell.getNumericCellValue();
-        double row6Result = row6B.getNumericCellValue() / row6Cell.getNumericCellValue();
+        double row2Result = 0;
+        double row4Result = 0;
+        double row6Result = 0;
 
-        double mainResult = Math.min(Math.min(row2Result, row4Result), Math.min(row4Result, row6Result));
+        if (row2Cell.getNumericCellValue() > 0) {
+            row2Result = row2B.getNumericCellValue() / row2Cell.getNumericCellValue();
+        }
+
+        if (row4Cell.getNumericCellValue() > 0) {
+            row4Result = row4B.getNumericCellValue() / row4Cell.getNumericCellValue();
+        }
+
+        if (row6Cell.getNumericCellValue() > 0) {
+            row6Result = row6B.getNumericCellValue() / row6Cell.getNumericCellValue();
+        }
+
+        double mainResult = getMinNumber(row2Result, row4Result, row6Result);
 
         if (mainResult == row2Result) {
             return 2;
@@ -252,6 +307,22 @@ public class TableCalculator {
         }
     }
 
+    private double getMinNumber(double number2, double number4, double number6) {
+        List<Double> numbers = List.of(number2, number4, number6);
+        List<Double> filteredNumbers = numbers.stream()
+                .filter(number -> number > 0)
+                .min((o1, o2) -> {
+                    if (o1 > o2) {
+                        double od2 = o2;
+                        return (int) od2;
+                    }
+                    double od1 = o1;
+                    return (int) od1;
+                })
+                .stream()
+                .toList();
+        return filteredNumbers.get(0);
+    }
 
     private double getResultColumnCell(Map<String, Double> v, Map<String, Double> v1, Map<String, Double> v2, Map<String, Double> v3, String key) {
         return ((v.get("v1") * v1.get(key)) + (v.get("v2") * v2.get(key)) + (v.get("v3") * v3.get(key))) - v.get("coeff" + key);

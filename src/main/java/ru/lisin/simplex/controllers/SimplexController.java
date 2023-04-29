@@ -39,13 +39,6 @@ public class SimplexController {
 
     @GetMapping("/home")
     public String getHomePage() throws IOException {
-		tableCalculator.calculateFirstVTypeTable(
-				additionalExpressionModel.getV1(),
-				additionalExpressionModel.getV2(),
-				additionalExpressionModel.getV3(),
-				additionalExpressionModel.getV()
-		);
-		tableCalculator.calculateNextTable();
         return "redirect:/html/HomePage.html";
     }
 
@@ -155,6 +148,28 @@ public class SimplexController {
 			v3.put("x3", x33);
 			v3.put("x4", x34);
 			v3.put("x5", x35);
+		}
+
+		boolean exitFlag = true;
+
+		tableCalculator.calculateFirstVTypeTable(
+				additionalExpressionModel.getV1(),
+				additionalExpressionModel.getV2(),
+				additionalExpressionModel.getV3(),
+				additionalExpressionModel.getV()
+		);
+
+		int iterationNumber = 0;
+
+		while (exitFlag) {
+			if (iterationNumber > 0) {
+				tableCalculator.generateCellsAgain();
+			}
+
+			System.out.println("[ Iteration ]");
+			tableCalculator.calculateNextTable();
+			++iterationNumber;
+			exitFlag = !tableCalculator.isFinishCalculatingVTables();
 		}
 
 		return "redirect:/home";
