@@ -303,6 +303,11 @@ public class TableCalculator {
             numbersToReturn.put(row6Result, 6);
         }
 
+        if (numbers.isEmpty()) {
+            log.error("The task doesn't have any solution");
+            System.exit(0);
+        }
+
         return numbersToReturn.get(Collections.min(numbers));
     }
 
