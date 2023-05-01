@@ -150,14 +150,13 @@ public class SimplexController {
 			v3.put("x5", x35);
 		}
 
-		boolean exitFlag = true;
-
 		tableCalculator.calculateFirstVTypeTable(
 				additionalExpressionModel.getV1(),
 				additionalExpressionModel.getV2(),
 				additionalExpressionModel.getV3(),
 				additionalExpressionModel.getV()
 		);
+		boolean exitFlag = !tableCalculator.isFinishCalculatingVTables();
 
 		int iterationNumber = 0;
 

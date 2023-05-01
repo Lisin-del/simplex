@@ -8,10 +8,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -58,7 +55,8 @@ public class TableCalculator {
         for (int rowNumber : emptyRowNumbers) {
             Row row = sheet.getRow(rowNumber);
             for (int i = 2; i < 8; ++i) {
-                row.createCell(i);
+                Cell cell = row.createCell(i);
+                cell.setCellStyle(excelService.getCellStyle());
             }
         }
     }
@@ -228,7 +226,6 @@ public class TableCalculator {
             }
 
             Row row = sheet.getRow(i);
-            row.createCell(resolvingColumnIndex);
             Cell cell = row.getCell(resolvingColumnIndex);
 
             double numericCellValue = cell.getNumericCellValue();
@@ -254,8 +251,13 @@ public class TableCalculator {
             Cell row8Cell = row8.getCell(i);
             double numericCellValue = row8Cell.getNumericCellValue();
 
+//            if (numericCellValue == 13.40) {
+//                resolvingColumnIndex = i;
+//                return resolvingColumnIndex;
+//            }
+
             if (numericCellValue > 0 && numericCellValue > cell8Value) {
-                //cell8Value = numericCellValue;
+                cell8Value = numericCellValue;
                 resolvingColumnIndex = i;
             }
         }
@@ -280,48 +282,28 @@ public class TableCalculator {
         Cell row4B = row4.getCell(2);
         Cell row6B = row6.getCell(2);
 
-        double row2Result = 0;
-        double row4Result = 0;
-        double row6Result = 0;
+        List<Double> numbers = new ArrayList<>();
+        Map<Double, Integer> numbersToReturn = new HashMap<>();
 
         if (row2Cell.getNumericCellValue() > 0) {
-            row2Result = row2B.getNumericCellValue() / row2Cell.getNumericCellValue();
+            double row2Result = row2B.getNumericCellValue() / row2Cell.getNumericCellValue();
+            numbers.add(row2Result);
+            numbersToReturn.put(row2Result, 2);
         }
 
         if (row4Cell.getNumericCellValue() > 0) {
-            row4Result = row4B.getNumericCellValue() / row4Cell.getNumericCellValue();
+            double row4Result = row4B.getNumericCellValue() / row4Cell.getNumericCellValue();
+            numbers.add(row4Result);
+            numbersToReturn.put(row4Result, 4);
         }
 
         if (row6Cell.getNumericCellValue() > 0) {
-            row6Result = row6B.getNumericCellValue() / row6Cell.getNumericCellValue();
+            double row6Result = row6B.getNumericCellValue() / row6Cell.getNumericCellValue();
+            numbers.add(row6Result);
+            numbersToReturn.put(row6Result, 6);
         }
 
-        double mainResult = getMinNumber(row2Result, row4Result, row6Result);
-
-        if (mainResult == row2Result) {
-            return 2;
-        } else if (mainResult == row4Result) {
-            return 4;
-        } else {
-            return 6;
-        }
-    }
-
-    private double getMinNumber(double number2, double number4, double number6) {
-        List<Double> numbers = List.of(number2, number4, number6);
-        List<Double> filteredNumbers = numbers.stream()
-                .filter(number -> number > 0)
-                .min((o1, o2) -> {
-                    if (o1 > o2) {
-                        double od2 = o2;
-                        return (int) od2;
-                    }
-                    double od1 = o1;
-                    return (int) od1;
-                })
-                .stream()
-                .toList();
-        return filteredNumbers.get(0);
+        return numbersToReturn.get(Collections.min(numbers));
     }
 
     private double getResultColumnCell(Map<String, Double> v, Map<String, Double> v1, Map<String, Double> v2, Map<String, Double> v3, String key) {

@@ -3,9 +3,7 @@ package ru.lisin.simplex.services;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -26,6 +24,13 @@ public class ExcelService {
 
     @Getter
     private Workbook workbook = new XSSFWorkbook();
+
+    @Getter
+    private CellStyle cellStyle = workbook.createCellStyle();
+
+    public ExcelService() {
+        cellStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00"));
+    }
 
     @PostConstruct
     private void createExcelFile() {
@@ -93,7 +98,8 @@ public class ExcelService {
             Row row = iterator.next();
 
             for (int i = 0; i < 8; ++i) {
-                row.createCell(i);
+                Cell cell = row.createCell(i);
+                cell.setCellStyle(cellStyle);
             }
         }
     }
