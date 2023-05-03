@@ -13,6 +13,7 @@ import java.util.*;
 @Service
 @Slf4j
 public class TableCalculator {
+    private final static int CHECK_VALUE = 1001;
     @Autowired
     private ExcelService excelService;
     private List<Integer> emptyRowNumbers = new ArrayList<>() {{
@@ -65,8 +66,24 @@ public class TableCalculator {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
 
-        int resolvingColumnIndex = findResolvingColumnIndex(sheet);
-        int resolvingRowIndex = findResolvingRowIndex(sheet, resolvingColumnIndex);
+        List<Integer> resolvingColumnIndexes = findResolvingColumnIndex(sheet);
+
+        int resolvingRowIndex = CHECK_VALUE;
+        int resolvingColumnIndex = CHECK_VALUE;
+
+        for (int colIndex : resolvingColumnIndexes) {
+            resolvingRowIndex = findResolvingRowIndex(sheet, colIndex);
+
+            if (resolvingRowIndex != CHECK_VALUE) {
+                resolvingColumnIndex = colIndex;
+                break;
+            }
+        }
+
+        if (resolvingRowIndex == CHECK_VALUE) {
+            log.error("The current task doesn't have a solution");
+            System.exit(0);
+        }
 
         double lambda = getLambda(sheet, resolvingRowIndex, resolvingColumnIndex);
 
@@ -119,6 +136,25 @@ public class TableCalculator {
             }
         }
         return true;
+    }
+
+    public boolean areVsMovedToFreeVars() {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
+
+        Row row = sheet.getRow(1);
+        Iterator<Cell> cellIterator = row.iterator();
+        List<String> cellLetters = new ArrayList<>();
+
+        while (cellIterator.hasNext()) {
+            cellLetters.add(cellIterator.next().getStringCellValue());
+        }
+
+        List<String> sortedLetters = cellLetters.stream()
+                .filter(letter -> letter.equals("V1") || letter.equals("V2") || letter.equals("V3"))
+                .toList();
+
+        return sortedLetters.size() == 3;
     }
 
     public void validateTable(Sheet sheet) {
@@ -242,7 +278,8 @@ public class TableCalculator {
         return 1 / resolvingCell.getNumericCellValue();
     }
 
-    public int findResolvingColumnIndex(Sheet sheet) {
+    public List<Integer> findResolvingColumnIndex(Sheet sheet) {
+        List<Integer> resolvingColumnIndexes = new ArrayList<>();
         Row row8 = sheet.getRow(8);
         double cell8Value = 0;
         int resolvingColumnIndex = 0;
@@ -259,6 +296,8 @@ public class TableCalculator {
             if (numericCellValue > 0 && numericCellValue > cell8Value) {
                 cell8Value = numericCellValue;
                 resolvingColumnIndex = i;
+                resolvingColumnIndexes.add(i);
+                log.info("Resolving column index [{}] was added", i);
             }
         }
 
@@ -266,7 +305,7 @@ public class TableCalculator {
             log.error("Can not find a resolving column!");
         }
 
-        return resolvingColumnIndex;
+        return resolvingColumnIndexes;
     }
 
     public int findResolvingRowIndex(Sheet sheet, int resolvingColumnIndex) {
@@ -304,8 +343,7 @@ public class TableCalculator {
         }
 
         if (numbers.isEmpty()) {
-            log.error("The task doesn't have any solution");
-            System.exit(0);
+            return CHECK_VALUE;
         }
 
         return numbersToReturn.get(Collections.min(numbers));

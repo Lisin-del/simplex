@@ -157,6 +157,7 @@ public class SimplexController {
 				additionalExpressionModel.getV()
 		);
 		boolean exitFlag = !tableCalculator.isFinishCalculatingVTables();
+		boolean VsMoved = false;
 
 		int iterationNumber = 0;
 
@@ -169,6 +170,8 @@ public class SimplexController {
 			tableCalculator.calculateNextTable();
 			++iterationNumber;
 			exitFlag = !tableCalculator.isFinishCalculatingVTables();
+			VsMoved = tableCalculator.areVsMovedToFreeVars();
+			System.out.println("VsMoved: " + VsMoved);
 		}
 
 		return "redirect:/home";
