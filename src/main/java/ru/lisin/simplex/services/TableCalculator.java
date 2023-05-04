@@ -1,18 +1,19 @@
 package ru.lisin.simplex.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 
 @Service
 @Slf4j
 public class TableCalculator {
+    private DecimalFormat decimalFormat = new DecimalFormat("0.00");
     private final static int CHECK_VALUE = 1001;
     @Autowired
     private ExcelService excelService;
@@ -131,7 +132,10 @@ public class TableCalculator {
         Row rowForCheck = sheet.getRow(8);
         for (int i = 3; i < 8; ++i) {
             double cellValueForCheck = rowForCheck.getCell(i).getNumericCellValue();
-            if (cellValueForCheck > 0) {
+            String formattedCellForCheck = decimalFormat.format(cellValueForCheck);
+            double aDouble = Double.parseDouble(formattedCellForCheck);
+
+            if (aDouble > 0) {
                 return false;
             }
         }
