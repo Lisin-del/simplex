@@ -1,12 +1,13 @@
 package ru.lisin.simplex.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -98,6 +99,46 @@ public class TableCalculator {
 
         Sheet nextResultVTableSheet = getNextResultVTable(resolvingColumnIndex, resolvingRowIndex);
         validateTable(nextResultVTableSheet);
+        excelService.saveExcelFile();
+    }
+
+    public void deleteVRowsColumns() {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = cloneSheet(workbook);
+        List<String> vNames = new ArrayList<>() {{
+            add("V1");
+            add("V2");
+            add("V3");
+        }};
+        List<Integer> columnIndexesToDelete = new ArrayList<>();
+        Row row1 = sheet.getRow(1);
+        for (int i = 0; i < 8; ++i) {
+            Cell cell = row1.getCell(i);
+            vNames.forEach(vName -> {
+                if (vName.equalsIgnoreCase(cell.getStringCellValue())) {
+                    columnIndexesToDelete.add(cell.getColumnIndex());
+                }
+            });
+        }
+        log.info("V Column indexes to delete: {}", columnIndexesToDelete);
+
+        for (int i = 0; i < 8; ++i) {
+            Row row = sheet.getRow(i);
+            for (int columnIndex : columnIndexesToDelete) {
+                Cell cellToDelete = row.getCell(columnIndex);
+                if (cellToDelete != null) {
+                    row.removeCell(cellToDelete);
+                }
+            }
+        }
+
+        Row vRowToDelete = sheet.getRow(8);
+        for (int i = 0; i < 8; ++i) {
+            Cell cellToDelete = vRowToDelete.getCell(i);
+            if (cellToDelete != null) {
+                vRowToDelete.removeCell(cellToDelete);
+            }
+        }
         excelService.saveExcelFile();
     }
 
