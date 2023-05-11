@@ -178,6 +178,8 @@ public class SimplexController {
 
 		}
 		tableCalculator.deleteVRowsColumns();
+		tableCalculator.moveColumns();
+		tableCalculator.createMainTaskFirstTable();
 
 		return "redirect:/home";
     }

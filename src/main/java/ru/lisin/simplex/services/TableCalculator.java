@@ -1,10 +1,7 @@
 package ru.lisin.simplex.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -68,7 +65,7 @@ public class TableCalculator {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
 
-        List<Integer> resolvingColumnIndexes = findResolvingColumnIndex(sheet);
+        List<Integer> resolvingColumnIndexes = findResolvingColumnIndex(sheet, 8);
 
         int resolvingRowIndex = CHECK_VALUE;
         int resolvingColumnIndex = CHECK_VALUE;
@@ -138,6 +135,91 @@ public class TableCalculator {
             if (cellToDelete != null) {
                 vRowToDelete.removeCell(cellToDelete);
             }
+        }
+        excelService.saveExcelFile();
+    }
+
+    public void moveColumns() {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = cloneSheet(workbook);
+
+        List<Integer> emptyColumnIndexes = new ArrayList<>();
+        List<Integer> filledColumnIndexes = new ArrayList<>();
+        List<Integer> columnsMustBeFilled = new ArrayList<>() {{
+            add(3);
+            add(4);
+        }};
+
+        Row row1 = sheet.getRow(1);
+        for (int i = 3; i < 8; ++i) {
+            Cell cell = row1.getCell(i);
+            if (cell == null) {
+                emptyColumnIndexes.add(i);
+            } else {
+                filledColumnIndexes.add(i);
+            }
+        }
+
+        for (int index : columnsMustBeFilled) {
+            if (emptyColumnIndexes.contains(index)) {
+                int filledColumnIndex = filledColumnIndexes.get(0);
+                filledColumnIndexes.remove(0);
+
+                for (int i = 0; i < 8; ++i) {
+                    Row row = sheet.getRow(i);
+                    Cell cellToStore = row.getCell(filledColumnIndex);
+                    if (cellToStore != null) {
+                        CellType cellType = cellToStore.getCellType();
+                        Cell cellMustBeFilled = row.getCell(index);
+                        if (cellMustBeFilled == null) {
+                            row.createCell(index);
+                            cellMustBeFilled = row.getCell(index);
+                            cellMustBeFilled.setCellStyle(excelService.getCellStyle());
+                        }
+                        switch (cellType) {
+                            case NUMERIC -> cellMustBeFilled.setCellValue(cellToStore.getNumericCellValue());
+                            case STRING -> cellMustBeFilled.setCellValue(cellToStore.getStringCellValue());
+                        }
+                        row.removeCell(cellToStore);
+                    }
+                }
+            }
+        }
+        excelService.saveExcelFile();
+    }
+
+    public void createMainTaskFirstTable() {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = cloneSheet(workbook);
+
+        List<Integer> rowIndexes = new ArrayList<>() {{
+            add(2);
+            add(4);
+            add(6);
+        }};
+
+        Map<Integer, Double> results = new HashMap<>();
+
+        double result = 0;
+        for (int i = 2; i < 5; ++i) {
+            for (int rowIndex : rowIndexes) {
+                Row row = sheet.getRow(rowIndex);
+                result += row.getCell(i).getNumericCellValue() * row.getCell(0).getNumericCellValue();
+            }
+            result = result - sheet.getRow(0).getCell(i).getNumericCellValue();
+            results.put(i, result);
+        }
+
+        Row row8 = sheet.getRow(8);
+        for (int i = 0; i < 5; ++i) {
+            row8.createCell(i);
+        }
+
+        row8.getCell(1).setCellValue("L");
+        for (Map.Entry<Integer, Double> res : results.entrySet()) {
+            Cell cell = row8.getCell(res.getKey());
+            cell.setCellStyle(excelService.getCellStyle());
+            cell.setCellValue(res.getValue());
         }
         excelService.saveExcelFile();
     }
@@ -323,13 +405,13 @@ public class TableCalculator {
         return 1 / resolvingCell.getNumericCellValue();
     }
 
-    public List<Integer> findResolvingColumnIndex(Sheet sheet) {
+    public List<Integer> findResolvingColumnIndex(Sheet sheet, int columnNumber) {
         List<Integer> resolvingColumnIndexes = new ArrayList<>();
         Row row8 = sheet.getRow(8);
         double cell8Value = 0;
         int resolvingColumnIndex = 0;
 
-        for (int i = 3; i < 8; ++i) {
+        for (int i = 3; i < columnNumber; ++i) {
             Cell row8Cell = row8.getCell(i);
             double numericCellValue = row8Cell.getNumericCellValue();
 
