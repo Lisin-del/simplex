@@ -48,24 +48,24 @@ public class TableCalculator {
         excelService.fillFirstVTable(v1, v2, v3, v, resultVRow);
     }
 
-    public void generateCellsAgain() {
+    public void generateCellsAgain(int columnNumber) {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
 
         for (int rowNumber : emptyRowNumbers) {
             Row row = sheet.getRow(rowNumber);
-            for (int i = 2; i < 8; ++i) {
+            for (int i = 2; i < columnNumber; ++i) {
                 Cell cell = row.createCell(i);
                 cell.setCellStyle(excelService.getCellStyle());
             }
         }
     }
 
-    public void calculateNextTable() {
+    public void calculateNextTable(int columnNumber) {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
 
-        List<Integer> resolvingColumnIndexes = findResolvingColumnIndex(sheet, 8);
+        List<Integer> resolvingColumnIndexes = findResolvingColumnIndex(sheet, columnNumber);
 
         int resolvingRowIndex = CHECK_VALUE;
         int resolvingColumnIndex = CHECK_VALUE;
@@ -90,12 +90,12 @@ public class TableCalculator {
         sheet.getRow(resolvingRowIndex + 1).getCell(resolvingColumnIndex).setCellValue(lambda);
 
         fillResolvingColumn(sheet, resolvingColumnIndex, resolvingRowIndex, lambda);
-        fillResolvingRow(sheet, resolvingRowIndex, lambda);
+        fillResolvingRow(sheet, resolvingRowIndex, lambda, columnNumber);
 
-        calculateOtherCells(resolvingColumnIndex, resolvingRowIndex);
+        calculateOtherCells(resolvingColumnIndex, resolvingRowIndex, columnNumber);
 
-        Sheet nextResultVTableSheet = getNextResultVTable(resolvingColumnIndex, resolvingRowIndex);
-        validateTable(nextResultVTableSheet);
+        Sheet nextResultVTableSheet = getNextResultVTable(resolvingColumnIndex, resolvingRowIndex, columnNumber);
+        validateTable(nextResultVTableSheet, columnNumber);
         excelService.saveExcelFile();
     }
 
@@ -188,6 +188,43 @@ public class TableCalculator {
         excelService.saveExcelFile();
     }
 
+    public void setTargetFunctionCoefficients(Map<String, Double> targetFunctionMap) {
+        Workbook workbook = excelService.getWorkbook();
+        Sheet sheet = cloneSheet(workbook);
+
+        Row row0 = sheet.getRow(0);
+        Row row1 = sheet.getRow(1);
+
+        for (int i = 3; i < 5; ++i) {
+            Cell row0Cell = row0.getCell(i);
+            Cell row1Cell = row1.getCell(i);
+
+            if (row0Cell != null && row1Cell != null) {
+                Double targetFunctionXValue = targetFunctionMap.get(row1Cell.getStringCellValue());
+                row0Cell.setCellValue(targetFunctionXValue);
+            }
+        }
+
+        List<Integer> rowIndexes = new ArrayList<>() {{
+            add(2);
+            add(4);
+            add(6);
+        }};
+
+        for (int rowIndex : rowIndexes) {
+            Row row = sheet.getRow(rowIndex);
+            Cell cell0 = row.getCell(0);
+            Cell cell1 = row.getCell(1);
+
+            if (cell0 != null && cell1 != null) {
+                Double targetFunctionXValue = targetFunctionMap.get(cell1.getStringCellValue());
+                cell0.setCellValue(targetFunctionXValue);
+            }
+        }
+
+        excelService.saveExcelFile();
+    }
+
     public void createMainTaskFirstTable() {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
@@ -200,8 +237,9 @@ public class TableCalculator {
 
         Map<Integer, Double> results = new HashMap<>();
 
-        double result = 0;
+
         for (int i = 2; i < 5; ++i) {
+            double result = 0;
             for (int rowIndex : rowIndexes) {
                 Row row = sheet.getRow(rowIndex);
                 result += row.getCell(i).getNumericCellValue() * row.getCell(0).getNumericCellValue();
@@ -224,7 +262,7 @@ public class TableCalculator {
         excelService.saveExcelFile();
     }
 
-    public void calculateOtherCells(int resolvingColumnIndex, int resolvingRowIndex) {
+    public void calculateOtherCells(int resolvingColumnIndex, int resolvingRowIndex, int columnNumber) {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
         Row resolvingRow = sheet.getRow(resolvingRowIndex);
@@ -234,7 +272,7 @@ public class TableCalculator {
         for (int rowNumber : sortedRowNumbers) {
             Row row = sheet.getRow(rowNumber);
 
-            for (int i = 2; i < 8; ++i) {
+            for (int i = 2; i < columnNumber; ++i) {
                 Cell cell = row.getCell(i);
 
                 if (i == resolvingColumnIndex) {
@@ -248,12 +286,12 @@ public class TableCalculator {
         }
     }
 
-    public boolean isFinishCalculatingVTables() {
+    public boolean isFinishCalculatingTables(int columnNumber) {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
 
         Row rowForCheck = sheet.getRow(8);
-        for (int i = 3; i < 8; ++i) {
+        for (int i = 3; i < columnNumber; ++i) {
             double cellValueForCheck = rowForCheck.getCell(i).getNumericCellValue();
             String formattedCellForCheck = decimalFormat.format(cellValueForCheck);
             double aDouble = Double.parseDouble(formattedCellForCheck);
@@ -284,7 +322,7 @@ public class TableCalculator {
         return sortedLetters.size() == 3;
     }
 
-    public void validateTable(Sheet sheet) {
+    public void validateTable(Sheet sheet, int columnNumber) {
         List<Integer> rowIndexes = new ArrayList<>() {{
             add(2);
             add(4);
@@ -292,7 +330,7 @@ public class TableCalculator {
         }};
 
         double result = 0;
-        for (int i = 2; i < 8; ++i) {
+        for (int i = 2; i < columnNumber; ++i) {
             for (int rowIndex : rowIndexes) {
                 Row row = sheet.getRow(rowIndex);
                 result += row.getCell(i).getNumericCellValue() * row.getCell(0).getNumericCellValue();
@@ -308,7 +346,7 @@ public class TableCalculator {
 
     }
 
-    public Sheet getNextResultVTable(int resolvingColumnIndex, int resolvingRowIndex) {
+    public Sheet getNextResultVTable(int resolvingColumnIndex, int resolvingRowIndex, int columnNumber) {
         Workbook workbook = excelService.getWorkbook();
         Sheet sheet = cloneSheet(workbook);
 
@@ -329,7 +367,7 @@ public class TableCalculator {
 
         Row rowToMoveToResolvingRow = sheet.getRow(resolvingRowIndex + 1);
 
-        for (int i = 2; i < 8; ++i) {
+        for (int i = 2; i < columnNumber; ++i) {
             Cell rowToMoveToResolvingRowCell = rowToMoveToResolvingRow.getCell(i);
             resolvingRow.getCell(i).setCellValue(rowToMoveToResolvingRowCell.getNumericCellValue());
             rowToMoveToResolvingRow.removeCell(rowToMoveToResolvingRowCell);
@@ -345,7 +383,7 @@ public class TableCalculator {
         for (int rowNumber : sortedRowNumbers) {
             Row notResolvingRow = sheet.getRow(rowNumber);
 
-            for (int i = 2; i < 8; ++i) {
+            for (int i = 2; i < columnNumber; ++i) {
                 if (i == resolvingColumnIndex) {
                     continue;
                 }
@@ -366,10 +404,10 @@ public class TableCalculator {
         return workbook.getSheetAt(indexOfClonedSheet + 1);
     }
 
-    public void fillResolvingRow(Sheet sheet, int resolvingRowIndex, double lambda) {
+    public void fillResolvingRow(Sheet sheet, int resolvingRowIndex, double lambda, int columnNumber) {
         Row filledRow = sheet.getRow(resolvingRowIndex);
         Row emptyRow = sheet.getRow(resolvingRowIndex + 1);
-        for (int i = 2; i < 8; ++i) {
+        for (int i = 2; i < columnNumber; ++i) {
             Cell cell = filledRow.getCell(i);
             double numericCellValue = cell.getNumericCellValue();
             double resultValue = numericCellValue * lambda;
@@ -402,7 +440,12 @@ public class TableCalculator {
     public double getLambda(Sheet sheet, int resolvingRowIndex, int resolvingColumnIndex) {
         Row resolvingRow = sheet.getRow(resolvingRowIndex);
         Cell resolvingCell = resolvingRow.getCell(resolvingColumnIndex);
-        return 1 / resolvingCell.getNumericCellValue();
+
+        double numericCellValue = resolvingCell.getNumericCellValue();
+        String formattedCellForCheck = decimalFormat.format(numericCellValue);
+        double aDouble = Double.parseDouble(formattedCellForCheck);
+
+        return 1.00 / aDouble;
     }
 
     public List<Integer> findResolvingColumnIndex(Sheet sheet, int columnNumber) {

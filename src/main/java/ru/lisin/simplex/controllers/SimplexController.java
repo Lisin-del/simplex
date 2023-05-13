@@ -72,11 +72,19 @@ public class SimplexController {
             @RequestParam double x35,
             @RequestParam double result3
     ) {
-		targetFunction.setX1(x01);
-		targetFunction.setX2(x02);
-		targetFunction.setX3(x03);
-		targetFunction.setX4(x04);
-		targetFunction.setX5(x05);
+		// the target function aims to minimum
+		Map<String, Double> targetFunctionMap = targetFunction.getTargetFunction();
+		targetFunctionMap.put("X1", x01 * -1);
+		targetFunctionMap.put("X2", x02 * -1);
+		targetFunctionMap.put("X3", x03 * -1);
+		targetFunctionMap.put("X4", x04 * -1);
+		targetFunctionMap.put("X5", x05 * -1);
+
+		targetFunction.setX1(x01 * -1);
+		targetFunction.setX2(x02 * -1);
+		targetFunction.setX3(x03 * -1);
+		targetFunction.setX4(x04 * -1);
+		targetFunction.setX5(x05 * -1);
 
 		funcRestriction1.setX1(x11);
 		funcRestriction1.setX2(x12);
@@ -156,20 +164,20 @@ public class SimplexController {
 				additionalExpressionModel.getV3(),
 				additionalExpressionModel.getV()
 		);
-		boolean exitFlag = !tableCalculator.isFinishCalculatingVTables();
+		boolean exitFlag = !tableCalculator.isFinishCalculatingTables(8);
 		boolean VsMoved = !tableCalculator.areVsMovedToFreeVars();
 
 		int iterationNumber = 0;
 
 		while (exitFlag) {
 			if (iterationNumber > 0) {
-				tableCalculator.generateCellsAgain();
+				tableCalculator.generateCellsAgain(8);
 			}
 
-			System.out.println("[ Iteration ]");
-			tableCalculator.calculateNextTable();
+			System.out.println("[ Iteration " + iterationNumber + " ]");
+			tableCalculator.calculateNextTable(8);
 			++iterationNumber;
-			exitFlag = !tableCalculator.isFinishCalculatingVTables();
+			exitFlag = !tableCalculator.isFinishCalculatingTables(8);
 			VsMoved = tableCalculator.areVsMovedToFreeVars();
 			System.out.println("VsMoved: " + VsMoved);
 			if (exitFlag == false && !VsMoved == false) {
@@ -177,9 +185,29 @@ public class SimplexController {
 			}
 
 		}
-		tableCalculator.deleteVRowsColumns();
-		tableCalculator.moveColumns();
-		tableCalculator.createMainTaskFirstTable();
+
+		if (VsMoved) {
+			tableCalculator.deleteVRowsColumns();
+			tableCalculator.moveColumns();
+			tableCalculator.setTargetFunctionCoefficients(targetFunctionMap);
+			tableCalculator.createMainTaskFirstTable();
+
+			boolean mainTaskExitFlag = !tableCalculator.isFinishCalculatingTables(5);
+			int mainTaskIteration = 0;
+
+//			if (mainTaskIteration > 0) {
+//				tableCalculator.generateCellsAgain(5);
+//			}
+
+			while (mainTaskExitFlag) {
+				tableCalculator.generateCellsAgain(5);
+				System.out.println("[ Iteration " + mainTaskIteration + " ]");
+				tableCalculator.calculateNextTable(5);
+				++mainTaskIteration;
+				mainTaskExitFlag = !tableCalculator.isFinishCalculatingTables(5);
+			}
+		}
+
 
 		return "redirect:/home";
     }

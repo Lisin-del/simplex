@@ -13,22 +13,29 @@ public class ExpressionConfig {
 
     @Bean(name = "targetFunction")
     public ExpressionModel getTargetFunction() {
-        return new ExpressionModel(1.0, 1.0, 1.0, 1.0, 1.0, 0.0);
+        Map<String, Double> targetFunction = new HashMap<>() {{
+            put("X1", 1.0);
+            put("X2", 1.0);
+            put("X3", 1.0);
+            put("X4", 1.0);
+            put("X5", 1.0);
+        }};
+        return new ExpressionModel(1.0, 1.0, 1.0, 1.0, 1.0, 0.0, targetFunction);
     }
 
     @Bean(name = "funcRestriction1")
     public ExpressionModel getFunctionRestriction1() {
-        return new ExpressionModel(1.0, 1.0, 2.0, 0.0, 0.0, 4.0);
+        return new ExpressionModel(1.0, 1.0, 2.0, 0.0, 0.0, 4.0, null);
     }
 
     @Bean(name = "funcRestriction2")
     public ExpressionModel getFunctionRestriction2() {
-        return new ExpressionModel(0.0, -2.0, -2.0, 1.0, 1.0, -6.0);
+        return new ExpressionModel(0.0, -2.0, -2.0, 1.0, 1.0, -6.0, null);
     }
 
     @Bean(name = "funcRestriction3")
     public ExpressionModel getFunctionRestriction3() {
-        return new ExpressionModel(1.0, -1.0, 6.0, 1.0, 0.0, 12);
+        return new ExpressionModel(1.0, -1.0, 6.0, 1.0, 0.0, 12, null);
     }
 
     @Bean

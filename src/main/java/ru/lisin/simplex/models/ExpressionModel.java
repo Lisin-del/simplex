@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -14,4 +16,5 @@ public class ExpressionModel {
     private double x4;
     private double x5;
     private double result;
+    private Map<String, Double> targetFunction;
 }
