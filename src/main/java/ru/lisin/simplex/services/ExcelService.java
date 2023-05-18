@@ -26,10 +26,11 @@ public class ExcelService {
     private Workbook workbook = new XSSFWorkbook();
 
     @Getter
-    private CellStyle cellStyle = workbook.createCellStyle();
+    private CellStyle cellStyle;
 
     public ExcelService() {
-        cellStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00"));
+        this.cellStyle = workbook.createCellStyle();
+        this.cellStyle.setDataFormat(workbook.createDataFormat().getFormat("0.0000"));
     }
 
     @PostConstruct

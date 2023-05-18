@@ -11,7 +11,7 @@ import java.util.*;
 @Service
 @Slf4j
 public class TableCalculator {
-    private DecimalFormat decimalFormat = new DecimalFormat("0.00");
+    private DecimalFormat decimalFormat = new DecimalFormat("0.0000");
     private final static int CHECK_VALUE = 1001;
     @Autowired
     private ExcelService excelService;
@@ -463,7 +463,7 @@ public class TableCalculator {
 //                return resolvingColumnIndex;
 //            }
 
-            if (numericCellValue > 0 && numericCellValue > cell8Value) {
+            if (numericCellValue > 0) {
                 cell8Value = numericCellValue;
                 resolvingColumnIndex = i;
                 resolvingColumnIndexes.add(i);
