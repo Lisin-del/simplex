@@ -71,7 +71,7 @@ public class ExcelService {
 
     public void setCoefficients0(Row row) {
         for (int i = 2; i < 8; ++i) {
-            row.getCell(i).setCellValue(0);
+            row.getCell(i).setCellValue(doubleToString(0.00));
         }
     }
 
@@ -84,11 +84,11 @@ public class ExcelService {
     }
 
     public void setVX1X5Values(Row row, Map<String, Double> v) {
-        row.getCell(2).setCellValue(v.get("b"));
+        row.getCell(2).setCellValue(doubleToString(v.get("b")));
 
         int xValue = 1;
         for (int i = 3; i < 8; ++i) {
-            row.getCell(i).setCellValue(v.get("x" + xValue));
+            row.getCell(i).setCellValue(doubleToString(v.get("x" + xValue)));
             ++xValue;
         }
     }
@@ -100,7 +100,7 @@ public class ExcelService {
 
             for (int i = 0; i < 8; ++i) {
                 Cell cell = row.createCell(i);
-                cell.setCellStyle(cellStyle);
+                //cell.setCellStyle(cellStyle);
             }
         }
     }
@@ -128,17 +128,17 @@ public class ExcelService {
         setVX1X5(row1);
 
         Row row2 = sheet1.getRow(2);
-        row2.getCell(0).setCellValue(1);
+        row2.getCell(0).setCellValue(doubleToString(1.00));
         row2.getCell(1).setCellValue("V1");
         setVX1X5Values(row2, v1);
 
         Row row4 = sheet1.getRow(4);
-        row4.getCell(0).setCellValue(1);
+        row4.getCell(0).setCellValue(doubleToString(1.00));
         row4.getCell(1).setCellValue("V2");
         setVX1X5Values(row4, v2);
 
         Row row6 = sheet1.getRow(6);
-        row6.getCell(0).setCellValue(1);
+        row6.getCell(0).setCellValue(doubleToString(1.00));
         row6.getCell(1).setCellValue("V3");
         setVX1X5Values(row6, v3);
 
@@ -147,6 +147,17 @@ public class ExcelService {
         setVX1X5Values(row8, resultVRow);
 
         saveExcelFile();
+    }
+
+    public static String doubleToString(double number) {
+        return String.valueOf(number);
+    }
+
+    public static double stringToDouble(String string) {
+        if (string != null && !string.isEmpty()) {
+            return Double.parseDouble(string);
+        }
+        return 0;
     }
 
 }

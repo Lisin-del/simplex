@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import java.text.DecimalFormat;
 import java.util.*;
 
+import static ru.lisin.simplex.services.ExcelService.*;
+
 @Service
 @Slf4j
 public class TableCalculator {
@@ -56,7 +58,7 @@ public class TableCalculator {
             Row row = sheet.getRow(rowNumber);
             for (int i = 2; i < columnNumber; ++i) {
                 Cell cell = row.createCell(i);
-                cell.setCellStyle(excelService.getCellStyle());
+                //cell.setCellStyle(excelService.getCellStyle());
             }
         }
     }
@@ -87,7 +89,7 @@ public class TableCalculator {
         double lambda = getLambda(sheet, resolvingRowIndex, resolvingColumnIndex);
 
         //set lambda under a resolving cell
-        sheet.getRow(resolvingRowIndex + 1).getCell(resolvingColumnIndex).setCellValue(lambda);
+        sheet.getRow(resolvingRowIndex + 1).getCell(resolvingColumnIndex).setCellValue(doubleToString(lambda));
 
         fillResolvingColumn(sheet, resolvingColumnIndex, resolvingRowIndex, lambda);
         fillResolvingRow(sheet, resolvingRowIndex, lambda, columnNumber);
@@ -174,10 +176,10 @@ public class TableCalculator {
                         if (cellMustBeFilled == null) {
                             row.createCell(index);
                             cellMustBeFilled = row.getCell(index);
-                            cellMustBeFilled.setCellStyle(excelService.getCellStyle());
+                            //cellMustBeFilled.setCellStyle(excelService.getCellStyle());
                         }
                         switch (cellType) {
-                            case NUMERIC -> cellMustBeFilled.setCellValue(cellToStore.getNumericCellValue());
+                            case NUMERIC -> cellMustBeFilled.setCellValue(cellToStore.getStringCellValue());
                             case STRING -> cellMustBeFilled.setCellValue(cellToStore.getStringCellValue());
                         }
                         row.removeCell(cellToStore);
@@ -201,7 +203,7 @@ public class TableCalculator {
 
             if (row0Cell != null && row1Cell != null) {
                 Double targetFunctionXValue = targetFunctionMap.get(row1Cell.getStringCellValue());
-                row0Cell.setCellValue(targetFunctionXValue);
+                row0Cell.setCellValue(doubleToString(targetFunctionXValue));
             }
         }
 
@@ -218,7 +220,7 @@ public class TableCalculator {
 
             if (cell0 != null && cell1 != null) {
                 Double targetFunctionXValue = targetFunctionMap.get(cell1.getStringCellValue());
-                cell0.setCellValue(targetFunctionXValue);
+                cell0.setCellValue(doubleToString(targetFunctionXValue));
             }
         }
 
@@ -242,9 +244,9 @@ public class TableCalculator {
             double result = 0;
             for (int rowIndex : rowIndexes) {
                 Row row = sheet.getRow(rowIndex);
-                result += row.getCell(i).getNumericCellValue() * row.getCell(0).getNumericCellValue();
+                result += stringToDouble(row.getCell(i).getStringCellValue()) * stringToDouble(row.getCell(0).getStringCellValue());
             }
-            result = result - sheet.getRow(0).getCell(i).getNumericCellValue();
+            result = result - stringToDouble(sheet.getRow(0).getCell(i).getStringCellValue());
             results.put(i, result);
         }
 
@@ -256,8 +258,8 @@ public class TableCalculator {
         row8.getCell(1).setCellValue("L");
         for (Map.Entry<Integer, Double> res : results.entrySet()) {
             Cell cell = row8.getCell(res.getKey());
-            cell.setCellStyle(excelService.getCellStyle());
-            cell.setCellValue(res.getValue());
+            //cell.setCellStyle(excelService.getCellStyle());
+            cell.setCellValue(doubleToString(res.getValue()));
         }
         excelService.saveExcelFile();
     }
@@ -279,9 +281,9 @@ public class TableCalculator {
                     continue;
                 }
 
-                double result = resolvingRow.getCell(cell.getColumnIndex()).getNumericCellValue() *
-                        row.getCell(resolvingColumnIndex).getNumericCellValue();
-                cell.setCellValue(result);
+                double result = stringToDouble(resolvingRow.getCell(cell.getColumnIndex()).getStringCellValue()) *
+                        stringToDouble(row.getCell(resolvingColumnIndex).getStringCellValue());
+                cell.setCellValue(doubleToString(result));
             }
         }
     }
@@ -292,11 +294,11 @@ public class TableCalculator {
 
         Row rowForCheck = sheet.getRow(8);
         for (int i = 3; i < columnNumber; ++i) {
-            double cellValueForCheck = rowForCheck.getCell(i).getNumericCellValue();
-            String formattedCellForCheck = decimalFormat.format(cellValueForCheck);
-            double aDouble = Double.parseDouble(formattedCellForCheck);
+            double cellValueForCheck = stringToDouble(rowForCheck.getCell(i).getStringCellValue());
+            //String formattedCellForCheck = decimalFormat.format(cellValueForCheck);
+            //double aDouble = Double.parseDouble(formattedCellForCheck);
 
-            if (aDouble > 0) {
+            if (cellValueForCheck > 0) {
                 return false;
             }
         }
@@ -333,10 +335,10 @@ public class TableCalculator {
         for (int i = 2; i < columnNumber; ++i) {
             for (int rowIndex : rowIndexes) {
                 Row row = sheet.getRow(rowIndex);
-                result += row.getCell(i).getNumericCellValue() * row.getCell(0).getNumericCellValue();
+                result += stringToDouble(row.getCell(i).getStringCellValue()) * stringToDouble(row.getCell(0).getStringCellValue());
             }
-            double vValue = sheet.getRow(8).getCell(i).getNumericCellValue();
-            result = result - sheet.getRow(0).getCell(i).getNumericCellValue();
+            double vValue = stringToDouble(sheet.getRow(8).getCell(i).getStringCellValue());
+            result = result - stringToDouble(sheet.getRow(0).getCell(i).getStringCellValue());
 
             if (vValue != result) {
                 log.error("Result value in row V is {}, but expected {}", vValue, result);
@@ -359,24 +361,24 @@ public class TableCalculator {
         resolvingRow.getCell(1).setCellValue(freeMemberName);
         resolvingCell.setCellValue(basisNameValue);
 
-        double basisCoefficient = resolvingRow.getCell(0).getNumericCellValue();
-        double freeMemberCoefficient = sheet.getRow(0).getCell(resolvingColumnIndex).getNumericCellValue();
+        double basisCoefficient = stringToDouble(resolvingRow.getCell(0).getStringCellValue());
+        double freeMemberCoefficient = stringToDouble(sheet.getRow(0).getCell(resolvingColumnIndex).getStringCellValue());
 
-        resolvingRow.getCell(0).setCellValue(freeMemberCoefficient);
-        sheet.getRow(0).getCell(resolvingColumnIndex).setCellValue(basisCoefficient);
+        resolvingRow.getCell(0).setCellValue(doubleToString(freeMemberCoefficient));
+        sheet.getRow(0).getCell(resolvingColumnIndex).setCellValue(doubleToString(basisCoefficient));
 
         Row rowToMoveToResolvingRow = sheet.getRow(resolvingRowIndex + 1);
 
         for (int i = 2; i < columnNumber; ++i) {
             Cell rowToMoveToResolvingRowCell = rowToMoveToResolvingRow.getCell(i);
-            resolvingRow.getCell(i).setCellValue(rowToMoveToResolvingRowCell.getNumericCellValue());
+            resolvingRow.getCell(i).setCellValue(rowToMoveToResolvingRowCell.getStringCellValue());
             rowToMoveToResolvingRow.removeCell(rowToMoveToResolvingRowCell);
         }
 
         List<Integer> sortedRowNumbers = emptyRowNumbers.stream().filter(number -> number != resolvingRowIndex + 1).toList();
         for (int rowNumber : sortedRowNumbers) {
             Cell cell = sheet.getRow(rowNumber).getCell(resolvingColumnIndex);
-            sheet.getRow(rowNumber - 1).getCell(resolvingColumnIndex).setCellValue(cell.getNumericCellValue());
+            sheet.getRow(rowNumber - 1).getCell(resolvingColumnIndex).setCellValue(cell.getStringCellValue());
             sheet.getRow(rowNumber).removeCell(cell);
         }
 
@@ -387,8 +389,8 @@ public class TableCalculator {
                 if (i == resolvingColumnIndex) {
                     continue;
                 }
-                double resultCellValue = notResolvingRow.getCell(i).getNumericCellValue() + sheet.getRow(rowNumber - 1).getCell(i).getNumericCellValue();
-                sheet.getRow(rowNumber - 1).getCell(i).setCellValue(resultCellValue);
+                double resultCellValue = stringToDouble(notResolvingRow.getCell(i).getStringCellValue()) + stringToDouble(sheet.getRow(rowNumber - 1).getCell(i).getStringCellValue());
+                sheet.getRow(rowNumber - 1).getCell(i).setCellValue(doubleToString(resultCellValue));
                 notResolvingRow.removeCell(notResolvingRow.getCell(i));
             }
         }
@@ -409,12 +411,12 @@ public class TableCalculator {
         Row emptyRow = sheet.getRow(resolvingRowIndex + 1);
         for (int i = 2; i < columnNumber; ++i) {
             Cell cell = filledRow.getCell(i);
-            double numericCellValue = cell.getNumericCellValue();
+            double numericCellValue = stringToDouble(cell.getStringCellValue());
             double resultValue = numericCellValue * lambda;
             Cell emptyRowCell = emptyRow.getCell(i);
 
-            if (emptyRowCell.getNumericCellValue() == 0) {
-                emptyRowCell.setCellValue(resultValue);
+            if (stringToDouble(emptyRowCell.getStringCellValue()) == 0) {
+                emptyRowCell.setCellValue(doubleToString(resultValue));
             }
         }
     }
@@ -429,10 +431,10 @@ public class TableCalculator {
             Row row = sheet.getRow(i);
             Cell cell = row.getCell(resolvingColumnIndex);
 
-            double numericCellValue = cell.getNumericCellValue();
+            double numericCellValue = stringToDouble(cell.getStringCellValue());
             if (numericCellValue == 0) {
-                double result = (-lambda) * sheet.getRow(i - 1).getCell(resolvingColumnIndex).getNumericCellValue();
-                cell.setCellValue(result);
+                double result = (-lambda) * stringToDouble(sheet.getRow(i - 1).getCell(resolvingColumnIndex).getStringCellValue());
+                cell.setCellValue(doubleToString(result));
             }
         }
     }
@@ -441,11 +443,11 @@ public class TableCalculator {
         Row resolvingRow = sheet.getRow(resolvingRowIndex);
         Cell resolvingCell = resolvingRow.getCell(resolvingColumnIndex);
 
-        double numericCellValue = resolvingCell.getNumericCellValue();
-        String formattedCellForCheck = decimalFormat.format(numericCellValue);
-        double aDouble = Double.parseDouble(formattedCellForCheck);
+        double numericCellValue = stringToDouble(resolvingCell.getStringCellValue());
+        //String formattedCellForCheck = decimalFormat.format(numericCellValue);
+        //double aDouble = Double.parseDouble(formattedCellForCheck);
 
-        return 1.00 / aDouble;
+        return 1.00 / numericCellValue;
     }
 
     public List<Integer> findResolvingColumnIndex(Sheet sheet, int columnNumber) {
@@ -456,7 +458,7 @@ public class TableCalculator {
 
         for (int i = 3; i < columnNumber; ++i) {
             Cell row8Cell = row8.getCell(i);
-            double numericCellValue = row8Cell.getNumericCellValue();
+            double numericCellValue = stringToDouble(row8Cell.getStringCellValue());
 
 //            if (numericCellValue == 13.40) {
 //                resolvingColumnIndex = i;
@@ -494,20 +496,20 @@ public class TableCalculator {
         List<Double> numbers = new ArrayList<>();
         Map<Double, Integer> numbersToReturn = new HashMap<>();
 
-        if (row2Cell.getNumericCellValue() > 0) {
-            double row2Result = row2B.getNumericCellValue() / row2Cell.getNumericCellValue();
+        if (stringToDouble(row2Cell.getStringCellValue()) > 0) {
+            double row2Result = stringToDouble(row2B.getStringCellValue()) / stringToDouble(row2Cell.getStringCellValue());
             numbers.add(row2Result);
             numbersToReturn.put(row2Result, 2);
         }
 
-        if (row4Cell.getNumericCellValue() > 0) {
-            double row4Result = row4B.getNumericCellValue() / row4Cell.getNumericCellValue();
+        if (stringToDouble(row4Cell.getStringCellValue()) > 0) {
+            double row4Result = stringToDouble(row4B.getStringCellValue()) / stringToDouble(row4Cell.getStringCellValue());
             numbers.add(row4Result);
             numbersToReturn.put(row4Result, 4);
         }
 
-        if (row6Cell.getNumericCellValue() > 0) {
-            double row6Result = row6B.getNumericCellValue() / row6Cell.getNumericCellValue();
+        if (stringToDouble(row6Cell.getStringCellValue()) > 0) {
+            double row6Result = stringToDouble(row6B.getStringCellValue()) / stringToDouble(row6Cell.getStringCellValue());
             numbers.add(row6Result);
             numbersToReturn.put(row6Result, 6);
         }
