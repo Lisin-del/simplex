@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import java.util.Map;
 @Slf4j
 public class ExcelService {
     private final static String SIMPLEX_TABLE_PATH = "simplex_tables" + File.separator + "ResultSimplexTable.xlsx";
+    private static DecimalFormat decimalFormat = new DecimalFormat("#.##");
 
     @Getter
     private File resultExcelFile = new File(SIMPLEX_TABLE_PATH);

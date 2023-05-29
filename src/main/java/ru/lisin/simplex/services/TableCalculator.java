@@ -13,7 +13,7 @@ import static ru.lisin.simplex.services.ExcelService.*;
 @Service
 @Slf4j
 public class TableCalculator {
-    private DecimalFormat decimalFormat = new DecimalFormat("0.0000");
+//    private DecimalFormat decimalFormat = new DecimalFormat("0.0000");
     private final static int CHECK_VALUE = 1001;
     @Autowired
     private ExcelService excelService;
@@ -331,7 +331,7 @@ public class TableCalculator {
             add(6);
         }};
 
-        double result = 0;
+        double result = 0.0;
         for (int i = 2; i < columnNumber; ++i) {
             for (int rowIndex : rowIndexes) {
                 Row row = sheet.getRow(rowIndex);
