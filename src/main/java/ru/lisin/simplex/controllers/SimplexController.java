@@ -164,12 +164,12 @@ public class SimplexController {
 				additionalExpressionModel.getV3(),
 				additionalExpressionModel.getV()
 		);
-		boolean exitFlag = !tableCalculator.isFinishCalculatingTables(8);
-		boolean VsMoved = !tableCalculator.areVsMovedToFreeVars();
+//		boolean exitFlag = !tableCalculator.isFinishCalculatingTables(8);
+//		boolean VsMoved = !tableCalculator.areVsMovedToFreeVars();
 
 		int iterationNumber = 0;
 
-		while (exitFlag) {
+		while (true) {
 			if (iterationNumber > 0) {
 				tableCalculator.generateCellsAgain(8);
 			}
@@ -177,34 +177,37 @@ public class SimplexController {
 			System.out.println("[ Iteration " + iterationNumber + " ]");
 			tableCalculator.calculateNextTable(8);
 			++iterationNumber;
-			exitFlag = !tableCalculator.isFinishCalculatingTables(8);
-			VsMoved = tableCalculator.areVsMovedToFreeVars();
-			System.out.println("VsMoved: " + VsMoved);
-			if (exitFlag == false && !VsMoved == false) {
+			boolean exitFlag = tableCalculator.isFinishCalculatingTables(8);
+//			boolean VsMoved = tableCalculator.areVsMovedToFreeVars();
+//			System.out.println("VsMoved: " + VsMoved);
+			System.out.println("Exit flag: " + exitFlag);
+			if (exitFlag) {
 				break;
 			}
-
 		}
 
-		if (VsMoved) {
+		if (tableCalculator.areVsMovedToFreeVars()) {
+			System.out.println("V are moved to free vars");
 			tableCalculator.deleteVRowsColumns();
 			tableCalculator.moveColumns();
 			tableCalculator.setTargetFunctionCoefficients(targetFunctionMap);
 			tableCalculator.createMainTaskFirstTable();
 
-			boolean mainTaskExitFlag = !tableCalculator.isFinishCalculatingTables(5);
+			//boolean mainTaskExitFlag = !tableCalculator.isFinishCalculatingTables(5);
 			int mainTaskIteration = 0;
 
 //			if (mainTaskIteration > 0) {
 //				tableCalculator.generateCellsAgain(5);
 //			}
 
-			while (mainTaskExitFlag) {
+			while (true) {
 				tableCalculator.generateCellsAgain(5);
 				System.out.println("[ Iteration " + mainTaskIteration + " ]");
 				tableCalculator.calculateNextTable(5);
 				++mainTaskIteration;
-				mainTaskExitFlag = !tableCalculator.isFinishCalculatingTables(5);
+				if (tableCalculator.isFinishCalculatingTables(5)) {
+					break;
+				}
 			}
 		}
 
